@@ -43,100 +43,86 @@ def search_ancestors(node, search_type, query)
     end
   end
 
-  def a_search_name(root, query)
+  def a_search_helper(root, query, type)
     matches = []
     until root.parent == nil
-      if root.name == query
-        matches << root.name
+      if yield(root, query)
+        a_shovel_matches(matches, root, type)
       end
       root = root.parent
     end
     return matches
+  end
+
+  def a_shovel_matches(matches, node, type)
+    case type
+    when :name
+      matches << node.name
+    when :text
+      matches << node.text
+    when :id
+      matches << node.id
+    when :class
+      matches << node.class
+    end
+  end
+
+  def a_search_name(root, query)
+    a_search_helper(root, query, :name) { |node, val| node.name == val }
   end
 
   def a_search_text(root, query)
-    matches = []
-    until root.parent == nil
-      if root.text == query
-        matches << root.text
-      end
-      root = root.parent
-    end
-    return matches
+    a_search_helper(root, query, :text) { |node, val| node.text == val }
   end
 
   def a_search_id(root, query)
-    matches = []
-    until root.parent == nil
-      if root.id == query
-        matches << root.id
-      end
-      root = root.parent
-    end
-    return matches
+    a_search_helper(root, query, :id) { |node, val| node.id == val }
   end
 
   def a_search_class(root, query)
+    a_search_helper(root, query, :class) { |node, val| node.class == val }
+  end
+
+  def search_helper(root, query, type)
+    node_queue = [root]
     matches = []
-    until root.parent == nil
-      if root.class == query
-        matches << root.class
+    until node_queue.empty?
+      current_node = node_queue.shift
+      if yield(current_node, query)
+        shovel_matches(matches, current_node, type)
       end
-      root = root.parent
+      node_queue += current_node.children.map(&:dup)
     end
     return matches
+  end
+
+  def shovel_matches(matches, node, type)
+    case type
+    when :name
+      matches << node.name
+    when :text
+      matches << node.text
+    when :id
+      matches << node.id
+    when :class
+      matches << node.class
+    end
   end
 
   def search_name(root, query)
-    node_queue = [root]
-    matches = []
-    until node_queue.empty?
-      current_node = node_queue.shift
-      if current_node.name == query
-        matches << current_node.name
-      end
-      node_queue += current_node.children.map(&:dup)
-    end
-    return matches
+    search_helper(root, query, :name) { |node, val| node.name == val }
   end
 
   def search_text(root, query)
-    node_queue = [root]
-    matches = []
-    until node_queue.empty?
-      current_node = node_queue.shift
-      if current_node.text == query
-        matches << current_node.text
-      end
-      node_queue += current_node.children.map(&:dup)
-    end
-    return matches
+    search_helper(root, query, :text) { |node, val| node.text == val }
   end
 
   def search_id(root, query)
-    node_queue = [root]
-    matches = []
-    until node_queue.empty?
-      current_node = node_queue.shift
-      if current_node.id == query
-        matches << current_node.id
-      end
-      node_queue += current_node.children.map(&:dup)
-    end
-    return matches
+    search_helper(root, query, :id) { |node, val| node.id == val }
   end
 
   def search_class(root, query)
-    node_queue = [root]
-    matches = []
-    until node_queue.empty?
-      current_node = node_queue.shift
-      if current_node.class == query
-        matches << current_node.class
-      end
-      node_queue += current_node.children.map(&:dup)
-    end
-    return matches
+    search_helper(root, query, :class) { |node, val| node.class == val }
   end
 
 end
