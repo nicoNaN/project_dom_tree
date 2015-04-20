@@ -11,6 +11,7 @@ class DomReader
   def initialize(document_name)
     @page = DocumentLoader.new(document_name).content
     @document = Node.new('document', nil, nil, nil, [], nil, @page)
+    @test_node
     build_tree
   end
 
@@ -46,6 +47,10 @@ class DomReader
     parent = node
     elements_inside = /<#{name}.*?>(.*)<\/#{name}>/.match(child_text)[1]
 
+    if name == "ul"
+      @test_node = Node.new(name, text, classes_fixed, tag_fixed, children, parent, elements_inside)
+    end
+
     Node.new(name, text, classes_fixed, tag_fixed, children, parent, elements_inside)
   end
 
@@ -54,3 +59,10 @@ class DomReader
   end
 
 end
+
+test = DomReader.new("test.html")
+NodeRenderer.new.render(test.test_node)
+
+search = TreeSearcher.new(test)
+puts "#{search.search_by(:text, "One h2")}"
+puts "#{search.search_children(test.test_node, :text, 'One header')}"
